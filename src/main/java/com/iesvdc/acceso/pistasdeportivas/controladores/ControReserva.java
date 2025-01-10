@@ -59,18 +59,13 @@ public class ControReserva {
     public String mostrarFormularioAgregarReserva(Model model) {
         try {
             // Cargar instalaciones
-            List<Instalacion> instalaciones = repoInstalacion.findAll();
-            if (instalaciones.isEmpty()) {
-                model.addAttribute("mensaje", "No hay instalaciones disponibles.");
-            }
-            model.addAttribute("instalaciones", instalaciones);
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
 
             // Cargar horarios y ordenarlos por hora de inicio
             List<Horario> horarios = repoHorario.findAll();
-            if (horarios.isEmpty()) {
-                model.addAttribute("mensaje", "No hay horarios disponibles.");
-            }
             horarios.sort(Comparator.comparing(Horario::getHoraInicio)); // Ordenar horarios por hora de inicio
+            
+            // Añadir los horarios al modelo
             model.addAttribute("horarios", horarios);
 
             // Añadir un objeto de reserva vacío al modelo
@@ -84,6 +79,7 @@ public class ControReserva {
         return "reservas/add"; // Asegúrate de que esta plantilla exista
     }
 
+
     @PostMapping("/add")
     public String agregarReserva(@Valid @ModelAttribute("reserva") Reserva reserva, BindingResult result, Model model) {
         if (result.hasErrors()) {
@@ -92,7 +88,7 @@ public class ControReserva {
             model.addAttribute("horarios", repoHorario.findAll());
             return "reservas/add"; // Regresar al formulario si hay errores
         }
-
+        
         // Verificar si ya existe una reserva para la misma pista y horario
         List<Reserva> reservasExistentes = repoReserva.findByHorario(reserva.getHorario());
         if (!reservasExistentes.isEmpty()) {

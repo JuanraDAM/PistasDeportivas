@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Usuario</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div th:replace="plantilla/fragmentos.html :: navigation"></div>
+        <h3>Agregar Usuario</h3>
+        <form th:action="@{/usuario/add}" method="post" th:object="${usuario}">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username:</label>
+                <input type="text" id="username" name="username" class="form-control" th:field="*{username}" required />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" th:field="*{email}" required />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" th:field="*{password}" required />
+                <small class="form-text text-muted">La contraseña es obligatoria.</small>
+            </div>
+            <div class="mb-3">
+                <label for="tipo" class="form-label">Rol:</label>
+                <select id="tipo" name="tipo" class="form-select" th:field="*{tipo}" required>
+                    <option value="" disabled>Seleccione un rol</option>
+                    <option th:each="rol : ${T(com.iesvdc.acceso.pistasdeportivas.modelos.Rol).values()}" 
+                            th:value="${rol}" 
+                            th:text="${rol}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="/usuario" class="btn btn-secondary">Cancelar</a>
+        </form>
+        <div th:replace="plantilla/fragmentos.html :: footer"></div>
+    </div>
+</body>
+</html> 

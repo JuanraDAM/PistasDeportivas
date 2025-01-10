@@ -27,8 +27,7 @@
                                 <a class="nav-link text-white active" aria-current="page" href="/">
                                     <i class="fa-solid fa-indent"></i> | Inicio</a>
                             </li>
-                            <li sec:authorize="hasAuthority('ADMIN')" class="nav-item">
-                                <!-- SOLO ADMIN -->
+                            <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="pistasDropdown" data-bs-toggle="collapse" data-bs-target="#pistasMenu" aria-expanded="false">
                                     <i class="fa-solid fa-house-medical"></i> | Pistas
                                 </a>
@@ -37,8 +36,7 @@
                                     <li><a class="nav-link text-white" href="/instalacion/add">Alta</a></li>
                                 </ul>
                             </li>
-                            <li sec:authorize="hasAuthority('ADMIN')" class="nav-item">
-                                <!-- SOLO ADMIN -->
+                            <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="horariosDropdown" data-bs-toggle="collapse" data-bs-target="#horariosMenu" aria-expanded="false">
                                     <i class="fa-regular fa-clock"></i> | Horarios
                                 </a>
@@ -47,14 +45,23 @@
                                     <li><a class="nav-link text-white" href="/horario/add">Alta</a></li>
                                 </ul>
                             </li>
+                            <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
+                                <a class="nav-link text-white dropdown-toggle" href="#" id="reservasDropdown" data-bs-toggle="collapse" data-bs-target="#reservasMenu" aria-expanded="false">
+                                    <i class="fa-solid fa-calendar-check"></i> | Reservas
+                                </a>
+                                <ul class="collapse list-unstyled ps-3" id="reservasMenu">
+                                    <li><a class="nav-link text-white" href="/reservas/add">Crear Reserva</a></li>
+                                    <li><a class="nav-link text-white" href="/mis-datos/mis-reservas">Mis Reservas</a></li>
+                                    <li><a class="nav-link text-white" href="/reservas">Listar Reservas</a></li>
+                                </ul>
+                            </li>
                             <li sec:authorize="hasAuthority('ADMIN')" class="nav-item">
-                                <!-- SOLO ADMIN -->
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="usuariosDropdown" data-bs-toggle="collapse" data-bs-target="#usuariosMenu" aria-expanded="false">
-                                    <i class="fa-solid fa-users"></i> |  Usuarios
+                                    <i class="fa-solid fa-users"></i> | Usuarios
                                 </a>
                                 <ul class="collapse list-unstyled ps-3" id="usuariosMenu">
                                     <li><a class="nav-link text-white" href="/usuario">Listar</a></li>
-                                    <li><a class="nav-link text-white" href="/usuario/add">Alta</a></li>
+                                    <li><a class="nav-link text-white" href="/usuario/add">Agregar Usuario</a></li>
                                 </ul>
                             </li>
                             <li class="nav-item">

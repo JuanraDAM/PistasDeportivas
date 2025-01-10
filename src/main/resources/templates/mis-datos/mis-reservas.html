@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div th:replace="plantilla/fragmentos.html :: navigation"></div>
+        <h3>Mis Reservas</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Instalación</th>
+                    <th>Horario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="reserva : ${reservas}">
+                    <td th:text="${reserva.id}"></td>
+                    <td th:text="${reserva.horario.instalacion.nombre}"></td>
+                    <td th:text="${reserva.horario.horaInicio} + ' - ' + ${reserva.horario.horaFin}"></td>
+                    <td>
+                        <a class="btn btn-danger" th:href="@{/reservas/del/{id}(id=${reserva.id})}">Borrar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div th:replace="plantilla/fragmentos.html :: footer"></div>
+    </div>
+</body>
+</html> 
