@@ -8,29 +8,44 @@
 </head>
 <body>
     <div class="container-fluid">
-        <div th:replace="plantilla/fragmentos.html :: navigation"></div>
+        <!-- Barra de navegación -->
+        <div th:replace="~{plantilla/fragmentos.html :: navigation}"></div>
+        
+        <!-- Título -->
         <h3>Mis Reservas</h3>
+        
+        <!-- Mensaje de error -->
+        <div th:if="${mensaje}" class="alert alert-danger" role="alert">
+            <p th:text="${mensaje}"></p>
+        </div>
+        
+        <!-- Tabla de reservas -->
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Instalación</th>
                     <th>Horario</th>
+                    <th>Fecha</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="reserva : ${reservas}">
                     <td th:text="${reserva.id}"></td>
-                    <td th:text="${reserva.horario.instalacion.nombre}"></td>
+                    <td th:text="${reserva.instalacion != null ? reserva.instalacion.nombre : 'N/A'}"></td>
                     <td th:text="${reserva.horario.horaInicio} + ' - ' + ${reserva.horario.horaFin}"></td>
+                    <td th:text="${#temporals.format(reserva.fecha, 'yyyy-MM-dd')}"></td>
                     <td>
-                        <a class="btn btn-danger" th:href="@{/reservas/del/{id}(id=${reserva.id})}">Borrar</a>
+                        <a th:href="@{/reservas/edit/{id}(id=${reserva.id})}" class="btn btn-primary">Editar</a>
+                        <a th:href="@{/reservas/del/{id}(id=${reserva.id})}" class="btn btn-danger">Eliminar</a>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <div th:replace="plantilla/fragmentos.html :: footer"></div>
+        
+        <!-- Pie de página -->
+        <div th:replace="~{plantilla/fragmentos.html :: footer}"></div>
     </div>
 </body>
-</html> 
+</html>

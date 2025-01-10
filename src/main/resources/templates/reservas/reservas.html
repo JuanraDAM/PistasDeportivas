@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Reservas</title>
+    <title>Listado de Reservas</title>
     <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
     <div class="container-fluid">
-        <div th:replace="plantilla/fragmentos.html :: navigation"></div>
-        <h3>Lista de Reservas</h3>
+        <!-- Barra de navegación -->
+        <div th:replace="~{plantilla/fragmentos.html :: navigation}"></div>
+        
+        <!-- Título -->
+        <h3>Listado de Reservas</h3>
+        
+        <!-- Mensaje de error -->
+        <div th:if="${mensaje}" class="alert alert-danger" role="alert">
+            <p th:text="${mensaje}"></p>
+        </div>
+        
+        <!-- Tabla de reservas -->
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Usuario</th>
                     <th>Instalación</th>
                     <th>Horario</th>
@@ -23,19 +32,42 @@
             </thead>
             <tbody>
                 <tr th:each="reserva : ${reservas}">
-                    <td th:text="${reserva.id}"></td>
                     <td th:text="${reserva.usuario.username}"></td>
-                    <td th:text="${reserva.horario.instalacion.nombre}"></td>
+                    <td th:text="${reserva.instalacion != null ? reserva.instalacion.nombre : 'N/A'}"></td>
                     <td th:text="${reserva.horario.horaInicio} + ' - ' + ${reserva.horario.horaFin}"></td>
-                    <td th:text="${reserva.fecha}"></td>
+                    <td th:text="${#temporals.format(reserva.fecha, 'yyyy-MM-dd')}"></td>
                     <td>
-                        <a class="btn btn-danger" th:href="@{/reservas/del/{id}(id=${reserva.id})}">Borrar</a>
+                        <a th:href="@{/reservas/edit/{id}(id=${reserva.id})}" class="btn btn-primary">Editar</a>
+                        <a th:href="@{/reservas/del/{id}(id=${reserva.id})}" class="btn btn-danger">Eliminar</a>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <a class="btn btn-primary" href="/reservas/add">Agregar Reserva</a>
-        <div th:replace="plantilla/fragmentos.html :: footer"></div>
+        
+        <!-- Paginación -->
+        <div th:if="${page.totalPages > 1}">
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li class="page-item">
+                        <a class="page-link" th:href="${page.hasPrevious()} ? |/reservas?page=${page.number -1}| : '#'">
+                            <i class="fa-solid fa-chevron-left"></i>
+                            Anterior                            
+                        </a>
+                    </li>
+                    <li class="page-item"><a class="page-link active"
+                            th:text="|Estás en la página ${page.number+1} de ${page.totalPages}|" href="#">1</a></li>
+                    <li class="page-item">
+                        <a class="page-link" th:href="${page.hasNext()} ? |/reservas?page=${page.number +1}| : '#'">
+                            Siguiente 
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        
+        <!-- Pie de página -->
+        <div th:replace="~{plantilla/fragmentos.html :: footer}"></div>
     </div>
 </body>
-</html> 
+</html>
