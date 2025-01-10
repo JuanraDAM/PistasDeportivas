@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<head th:replace="~{plantilla/fragmentos.html :: headfiles}">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Reserva</title>
@@ -9,7 +9,8 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid">
+        <div th:replace="~{plantilla/fragmentos.html :: navigation}"></div>
         <h2>Añadir una nueva reserva</h2>
 
         <form th:action="@{/reservas/add}" th:object="${reserva}" method="post">
@@ -17,7 +18,6 @@
                 <p th:text="${mensaje}"></p>
             </div>
 
-            <!-- Instalación -->
             <div class="form-group">
                 <label for="instalacion">Instalación</label>
                 <select th:field="*{instalacion}" id="instalacion" class="form-control" required>
@@ -26,7 +26,6 @@
                 </select>
             </div>
 
-            <!-- Horarios -->
             <div class="form-group">
                 <label for="horario">Horario</label>
                 <select th:field="*{horario}" id="horario" class="form-control" required>
@@ -35,7 +34,6 @@
                 </select>
             </div>
 
-            <!-- Fecha -->
             <div class="form-group">
                 <label for="fecha">Fecha</label>
                 <input type="date" th:field="*{fecha}" id="fecha" class="form-control" required>
@@ -46,6 +44,7 @@
                 <a href="/reservas" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
+        <div th:replace="~{plantilla/fragmentos.html :: footer}"></div>
     </div>
 </body>
 
