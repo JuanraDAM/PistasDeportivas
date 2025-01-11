@@ -127,7 +127,8 @@ public class ControReserva {
         try {
             checkReservaConstraints(reserva, false);
             repoReserva.save(reserva);
-            return "redirect:/reservas";
+            // Redirigir a "Mis Reservas" en lugar de "reservas"
+            return "redirect:/mis-datos/mis-reservas";
         } catch (Exception e) {
             model.addAttribute("mensaje", e.getMessage());
             model.addAttribute("instalaciones", repoInstalacion.findAll());
@@ -177,7 +178,8 @@ public class ControReserva {
             reservaExistente.setHorario(reserva.getHorario());
             reservaExistente.setInstalacion(reserva.getInstalacion());
             repoReserva.save(reservaExistente);
-            return "redirect:/reservas";
+            // Redirigir a "Mis Reservas" en lugar de "reservas"
+            return "redirect:/mis-datos/mis-reservas";
         } catch (Exception e) {
             model.addAttribute("mensaje", e.getMessage());
             cargarDatosReserva(model, reserva);
@@ -190,7 +192,8 @@ public class ControReserva {
     public String eliminarReserva(@PathVariable Long id, Model model) {
         try {
             repoReserva.deleteById(id);
-            return "redirect:/reservas";
+            // Opcional: Redirigir a "Mis Reservas" en lugar de "reservas"
+            return "redirect:/mis-datos/mis-reservas";
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al eliminar la reserva: " + e.getMessage());
             e.printStackTrace();

@@ -23,10 +23,13 @@
                     <div class="p-3">
                         <h4 class="navbar-brand text-white">Gestión de Pistas Deportivas</h4>
                         <ul class="nav flex-column">
+                            <!-- Enlace Inicio (Público) -->
                             <li class="nav-item">
                                 <a class="nav-link text-white active" aria-current="page" href="/">
                                     <i class="fa-solid fa-indent"></i> | Inicio</a>
                             </li>
+
+                            <!-- Enlaces para ADMIN y OPERARIO -->
                             <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="pistasDropdown" data-bs-toggle="collapse" data-bs-target="#pistasMenu" aria-expanded="false">
                                     <i class="fa-solid fa-house-medical"></i> | Pistas
@@ -36,6 +39,8 @@
                                     <li><a class="nav-link text-white" href="/instalacion/add">Alta</a></li>
                                 </ul>
                             </li>
+
+                            <!-- Enlaces para ADMIN y OPERARIO -->
                             <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="horariosDropdown" data-bs-toggle="collapse" data-bs-target="#horariosMenu" aria-expanded="false">
                                     <i class="fa-regular fa-clock"></i> | Horarios
@@ -45,16 +50,28 @@
                                     <li><a class="nav-link text-white" href="/horario/add">Alta</a></li>
                                 </ul>
                             </li>
-                            <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')" class="nav-item">
+
+                            <!-- Enlaces para USUARIO, ADMIN y OPERARIO -->
+                            <li sec:authorize="hasAnyAuthority('USUARIO', 'ADMIN', 'OPERARIO')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="reservasDropdown" data-bs-toggle="collapse" data-bs-target="#reservasMenu" aria-expanded="false">
                                     <i class="fa-solid fa-calendar-check"></i> | Reservas
                                 </a>
                                 <ul class="collapse list-unstyled ps-3" id="reservasMenu">
-                                    <li><a class="nav-link text-white" href="/reservas/add">Crear Reserva</a></li>
-                                    <li><a class="nav-link text-white" href="/mis-datos/mis-reservas">Mis Reservas</a></li>
-                                    <li><a class="nav-link text-white" href="/reservas">Listar Reservas</a></li>
+                                    <!-- Enlaces visibles para USUARIO, ADMIN y OPERARIO -->
+                                    <li sec:authorize="hasAnyAuthority('USUARIO', 'ADMIN', 'OPERARIO')">
+                                        <a class="nav-link text-white" href="/reservas/add">Crear Reserva</a>
+                                    </li>
+                                    <li sec:authorize="hasAnyAuthority('USUARIO', 'ADMIN', 'OPERARIO')">
+                                        <a class="nav-link text-white" href="/mis-datos/mis-reservas">Mis Reservas</a>
+                                    </li>
+                                    <!-- Enlace visible solo para ADMIN y OPERARIO -->
+                                    <li sec:authorize="hasAnyAuthority('ADMIN', 'OPERARIO')">
+                                        <a class="nav-link text-white" href="/reservas">Listar Reservas</a>
+                                    </li>
                                 </ul>
                             </li>
+
+                            <!-- Enlaces para ADMIN -->
                             <li sec:authorize="hasAuthority('ADMIN')" class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="usuariosDropdown" data-bs-toggle="collapse" data-bs-target="#usuariosMenu" aria-expanded="false">
                                     <i class="fa-solid fa-users"></i> | Usuarios
@@ -64,9 +81,11 @@
                                     <li><a class="nav-link text-white" href="/usuario/add">Agregar Usuario</a></li>
                                 </ul>
                             </li>
+
+                            <!-- Enlaces Públicos -->
                             <li class="nav-item">
                                 <a class="nav-link text-white dropdown-toggle" href="#" id="ayudaDropdown" data-bs-toggle="collapse" data-bs-target="#ayudaMenu" aria-expanded="false">
-                                    <i class="fa-solid fa-info"></i> |  Ayuda
+                                    <i class="fa-solid fa-info"></i> | Ayuda
                                 </a>
                                 <ul class="collapse list-unstyled ps-3" id="ayudaMenu">
                                     <li><a class="nav-link text-white" href="/acerca">
@@ -75,10 +94,14 @@
                                         Manual</a></li>
                                 </ul>
                             </li>
+
+                            <!-- Enlaces de Autenticación -->
                             <li sec:authorize="isAuthenticated()" class="nav-item">
                                 <a class="nav-link text-white" href="/logout">
-                                    <i class="fa-solid fa-arrow-right-from-bracket"></i> |  Logout</a>
+                                    <i class="fa-solid fa-arrow-right-from-bracket"></i> | Logout</a>
                             </li>                    
+                            
+                            <!-- Información del Usuario Autenticado -->
                             <li class="nav-item">
                                 <a class="nav-link text-white" href="/mis-datos">
                                     <i class="fa-regular fa-user"></i> | 
@@ -113,21 +136,19 @@
         </div>
     </div>           
 
-        <div th:fragment="footer">
-            <footer>
-                <h5>© 2024 IES Virgen del Carmen</h5>
-                <p>Entró en el sistema como:
-                    <span th:text="${#authentication.name}"></span>
-                    (<span th:text="${#authentication.authorities[0]}"></span>)</p>
-                <p sec:authorize="hasAuthority('ADMIN')">
-                    <b>Entró en el sistema como admin</b>
-                </p>
-                
-            </footer>
-            <script src="/webjars/jquery/jquery.min.js"></script>
-            <script src="/webjars/popper.js/umd/popper.min.js"></script>
-            <script src="/webjars/bootstrap/js/bootstrap.bundle.js"></script>
-        </div>
+    <div th:fragment="footer">
+        <footer>
+            <h5>© 2024 IES Virgen del Carmen</h5>
+            <p>Entró en el sistema como:
+                <span th:text="${#authentication.name}"></span>
+                (<span th:text="${#authentication.authorities[0]}"></span>)</p>
+            <p sec:authorize="hasAuthority('ADMIN')">
+                <b>Entró en el sistema como admin</b>
+            </p>
+        </footer>
+        <script src="/webjars/jquery/jquery.min.js"></script>
+        <script src="/webjars/popper.js/umd/popper.min.js"></script>
+        <script src="/webjars/bootstrap/js/bootstrap.bundle.js"></script>
     </div>
 </body>
 

@@ -35,16 +35,23 @@ public class ConfiSec {
     @Bean 
     public SecurityFilterChain filtro(HttpSecurity httpSec) throws Exception {
         return httpSec.authorizeHttpRequests((request) -> request
-                .requestMatchers("/webjars/**", "/img/**", "/login", "/logout", "/register", "/acerca", "/denegado")
-                .permitAll()
-                .requestMatchers("/pista/**").hasAnyAuthority("ADMIN", "OPERARIO")
-                .requestMatchers("/horario/**").hasAnyAuthority("ADMIN", "OPERARIO")
+                .requestMatchers(
+                    "/webjars/**", 
+                    "/img/**", 
+                    "/login", 
+                    "/logout", 
+                    "/register", 
+                    "/acerca", 
+                    "/denegado"
+                ).permitAll()
+                .requestMatchers("/pista/**", "/horario/**").hasAnyAuthority("ADMIN", "OPERARIO")
                 .requestMatchers("/usuario/**").hasAuthority("ADMIN")
+                .requestMatchers("/reservas/add", "/mis-datos/mis-reservas").hasAnyAuthority("USUARIO", "ADMIN", "OPERARIO")
                 .anyRequest().authenticated())
                 .exceptionHandling((exception) -> exception.accessDeniedPage("/denegado"))
                 .formLogin((formLogin) -> formLogin.loginPage("/login").permitAll())
                 .logout((logout) -> logout.invalidateHttpSession(true).logoutSuccessUrl("/").permitAll())
-                .csrf((protection) -> protection.disable())
+                .csrf((csrf) -> csrf.disable())
                 .build();
     }
 }
