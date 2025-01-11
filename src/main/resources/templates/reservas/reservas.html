@@ -5,20 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Reservas</title>
     <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+    <script>
+        function actualizarReservas() {
+            var instalacionId = document.getElementById("instalacionSelect").value;
+            if (instalacionId) {
+                window.location.href = "/reservas?instalacionId=" + instalacionId;
+            } else {
+                window.location.href = "/reservas";
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container-fluid">
         <!-- Barra de navegación -->
         <div th:replace="~{plantilla/fragmentos.html :: navigation}"></div>
-        
+
         <!-- Título -->
         <h3>Listado de Reservas</h3>
-        
+
         <!-- Mensaje de error -->
         <div th:if="${mensaje}" class="alert alert-danger" role="alert">
             <p th:text="${mensaje}"></p>
         </div>
-        
+
+        <!-- Filtro por instalación -->
+        <div class="form-group">
+            <label for="instalacionSelect">Filtrar por instalación:</label>
+            <select id="instalacionSelect" class="form-control" onchange="actualizarReservas()">
+                <option value="">Mostrar todas</option>
+                <option th:each="instalacion : ${instalaciones}"
+                        th:value="${instalacion.id}"
+                        th:text="${instalacion.nombre}"
+                        th:selected="${instalacion.id == instalacionId}">
+                </option>
+            </select>
+        </div>
+
         <!-- Tabla de reservas -->
         <table class="table table-striped">
             <thead>
@@ -43,29 +66,41 @@
                 </tr>
             </tbody>
         </table>
-        
+
         <!-- Paginación -->
         <div th:if="${page.totalPages > 1}">
             <nav aria-label="Page navigation example">
                 <ul class="pagination">
-                    <li class="page-item">
-                        <a class="page-link" th:href="${page.hasPrevious()} ? |/reservas?page=${page.number -1}| : '#'">
-                            <i class="fa-solid fa-chevron-left"></i>
-                            Anterior                            
+                    <li class="page-item" th:classappend="${page.hasPrevious()} ? '' : 'disabled'">
+                        <a class="page-link"
+                           th:href="${(page.hasPrevious() and instalacionId != null) 
+                                     ? '/reservas?page=' + (page.number - 1) + '&instalacionId=' + instalacionId
+                                     : (page.hasPrevious() ? '/reservas?page=' + (page.number - 1) : '#')}"
+                           aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
-                    <li class="page-item"><a class="page-link active"
-                            th:text="|Estás en la página ${page.number+1} de ${page.totalPages}|" href="#">1</a></li>
-                    <li class="page-item">
-                        <a class="page-link" th:href="${page.hasNext()} ? |/reservas?page=${page.number +1}| : '#'">
-                            Siguiente 
-                            <i class="fa-solid fa-chevron-right"></i>
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(1, page.totalPages)}"
+                        th:classappend="${page.number + 1 == i} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/reservas(page=${i - 1}, instalacionId=${instalacionId})}"
+                           th:text="${i}">
+                        </a>
+                    </li>
+                    <li class="page-item" th:classappend="${page.hasNext()} ? '' : 'disabled'">
+                        <a class="page-link"
+                           th:href="${(page.hasNext() and instalacionId != null) 
+                                     ? '/reservas?page=' + (page.number + 1) + '&instalacionId=' + instalacionId
+                                     : (page.hasNext() ? '/reservas?page=' + (page.number + 1) : '#')}"
+                           aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
                 </ul>
             </nav>
         </div>
-        
+
         <!-- Pie de página -->
         <div th:replace="~{plantilla/fragmentos.html :: footer}"></div>
     </div>

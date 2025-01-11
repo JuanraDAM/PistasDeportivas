@@ -44,12 +44,24 @@ public class ControReserva {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    @GetMapping("")
-    public String listarReservas(Model model, @PageableDefault(size = 10) Pageable pageable) {
+    @GetMapping
+    public String listarReservas(Model model, @PageableDefault(size = 10) Pageable pageable, @RequestParam(required = false) Long instalacionId) {
         try {
-            Page<Reserva> page = repoReserva.findAll(pageable);
+            Page<Reserva> page;
+            if (instalacionId != null && instalacionId != 0) {
+                Instalacion instalacion = repoInstalacion.findById(instalacionId).orElse(null);
+                if (instalacion != null) {
+                    page = repoReserva.findByInstalacion(instalacion, pageable);
+                } else {
+                    page = Page.empty(pageable);
+                }
+            } else {
+                page = repoReserva.findAll(pageable);
+            }
             model.addAttribute("page", page);
             model.addAttribute("reservas", page.getContent());
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("instalacionId", instalacionId);
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al cargar las reservas: " + e.getMessage());
             e.printStackTrace();

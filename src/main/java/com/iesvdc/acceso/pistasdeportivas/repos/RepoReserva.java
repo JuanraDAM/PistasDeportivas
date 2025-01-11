@@ -20,4 +20,7 @@ public interface RepoReserva extends JpaRepository<Reserva, Long> {
     List<Reserva> findByHorarioIn(List<Horario> horarios);
     List<Reserva> findByInstalacionAndFecha(Instalacion instalacion, LocalDate fecha);
     List<Reserva> findByInstalacionAndFechaAndHorario(Instalacion instalacion, LocalDate fecha, Horario horario);
+    
+    // Método para buscar reservas por instalación con paginación
+    Page<Reserva> findByInstalacion(Instalacion instalacion, Pageable pageable);
 }
