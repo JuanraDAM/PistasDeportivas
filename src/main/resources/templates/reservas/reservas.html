@@ -60,8 +60,12 @@
                     <td th:text="${reserva.horario.horaInicio} + ' - ' + ${reserva.horario.horaFin}"></td>
                     <td th:text="${#temporals.format(reserva.fecha, 'yyyy-MM-dd')}"></td>
                     <td>
-                        <a th:href="@{/reservas/edit/{id}(id=${reserva.id})}" class="btn btn-primary">Editar</a>
-                        <a th:href="@{/reservas/del/{id}(id=${reserva.id})}" class="btn btn-danger">Eliminar</a>
+                        <span th:if="${reserva.fecha.isAfter(T(java.time.LocalDate).now()) or 
+                                     (reserva.fecha.isEqual(T(java.time.LocalDate).now()) and 
+                                      reserva.horario.horaInicio.isAfter(T(java.time.LocalDateTime).now().toLocalTime()))}">
+                            <a th:href="@{/reservas/edit/{id}(id=${reserva.id})}" class="btn btn-primary">Editar</a>
+                            <a th:href="@{/reservas/del/{id}(id=${reserva.id})}" class="btn btn-danger">Eliminar</a>
+                        </span>
                     </td>
                 </tr>
             </tbody>
@@ -73,7 +77,7 @@
                 <ul class="pagination">
                     <li class="page-item" th:classappend="${page.hasPrevious()} ? '' : 'disabled'">
                         <a class="page-link"
-                           th:href="${(page.hasPrevious() and instalacionId != null) 
+                           th:href="${(page.hasPrevious() and instalacionId != null)
                                      ? '/reservas?page=' + (page.number - 1) + '&instalacionId=' + instalacionId
                                      : (page.hasPrevious() ? '/reservas?page=' + (page.number - 1) : '#')}"
                            aria-label="Previous">
