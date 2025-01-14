@@ -212,39 +212,55 @@ public class ControReserva {
     private void checkReservaConstraints(Reserva reserva, boolean isEdit) throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Usuario user = repoUsuario.findByUsername(authentication.getName()).get(0);
-
+    
         LocalDate hoy = LocalDate.now();
         LocalDateTime ahora = LocalDateTime.now();
-
+    
         if (reserva.getFecha().isBefore(hoy)) {
             throw new Exception("La fecha de la reserva no puede ser anterior al día de hoy.");
         }
         if (reserva.getFecha().isAfter(hoy.plusDays(7))) {
             throw new Exception("No se puede reservar con más de una semana de antelación.");
         }
-
+    
         if (isEdit && !reserva.getFecha().isAfter(hoy)) {
             throw new Exception("No se puede actualizar reservas que ya han pasado o son para el día de hoy.");
         }
-
+    
         List<Reserva> userSameDay = repoReserva.findByUsuario(user).stream()
             .filter(r -> r.getFecha().equals(reserva.getFecha())
                       && !r.getId().equals(reserva.getId()))
             .collect(Collectors.toList());
-        if (!userSameDay.isEmpty() && !isEdit) {
+        if (!userSameDay.isEmpty()) {
             throw new Exception("Ya tienes una reserva para ese día.");
         }
-
+    
         if (!isEdit) {
             reserva.setUsuario(user);
         }
-
+    
         // No reservar en horas ya pasadas del día actual
         if (reserva.getFecha().isEqual(hoy)) {
             LocalTime horaReserva = reserva.getHorario().getHoraInicio();
             if (horaReserva.isBefore(ahora.toLocalTime())) {
                 throw new Exception("No se puede reservar en horas ya pasadas del día de hoy.");
             }
+        }
+    
+        // Verificar que no haya solapamiento de reservas para la misma instalación y horario
+        if (reserva.getHorario() == null || reserva.getHorario().getHoraInicio() == null || reserva.getHorario().getHoraFin() == null) {
+            throw new Exception("El horario de la reserva no puede ser nulo.");
+        }
+        List<Reserva> overlappingReservas = repoReserva.findByInstalacionAndFecha(reserva.getInstalacion(), reserva.getFecha()).stream()
+            .filter(r -> r.getHorario() != null &&
+                         r.getHorario().getHoraInicio() != null &&
+                         r.getHorario().getHoraFin() != null &&
+                         r.getHorario().getHoraInicio().isBefore(reserva.getHorario().getHoraFin()) &&
+                         r.getHorario().getHoraFin().isAfter(reserva.getHorario().getHoraInicio()) &&
+                         !r.getId().equals(reserva.getId()))
+            .collect(Collectors.toList());
+        if (!overlappingReservas.isEmpty()) {
+            throw new Exception("La reserva se solapa con otra existente en el mismo horario.");
         }
     }
 }

@@ -24,20 +24,20 @@ public class ControUsuario {
     @GetMapping("")
     public String listarUsuarios(Model modelo) {
         modelo.addAttribute("usuarios", repoUsuario.findAll());
-        return "usuarios/usuarios"; // Asegúrate de que esta plantilla exista
+        return "usuarios/usuarios";
     }
 
     @GetMapping("/add")
     public String mostrarFormularioAlta(Model modelo) {
         modelo.addAttribute("usuario", new Usuario());
-        return "usuarios/add"; // Cambiado a la nueva plantilla de agregar
+        return "usuarios/add";
     }
 
     @PostMapping("/add")
     public String agregarUsuario(@ModelAttribute("usuario") Usuario usuario) {
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         repoUsuario.save(usuario);
-        return "redirect:/usuario"; // Redirige a la lista de usuarios
+        return "redirect:/usuario";
     }
 
     @GetMapping("/edit/{id}")
@@ -45,9 +45,9 @@ public class ControUsuario {
         Optional<Usuario> usuarioOpt = repoUsuario.findById(id);
         if (usuarioOpt.isPresent()) {
             modelo.addAttribute("usuario", usuarioOpt.get());
-            return "usuarios/edit"; // Cambiado a la nueva plantilla de editar
+            return "usuarios/edit";
         } else {
-            return "redirect:/usuario"; // Redirige si no se encuentra el usuario
+            return "redirect:/usuario";
         }
     }
 
@@ -56,22 +56,20 @@ public class ControUsuario {
         Optional<Usuario> usuarioExistenteOpt = repoUsuario.findById(id);
         if (usuarioExistenteOpt.isPresent()) {
             Usuario usuarioExistente = usuarioExistenteOpt.get();
-            // Solo actualizar los campos que no son nulos o vacíos
             usuarioExistente.setUsername(usuario.getUsername());
             usuarioExistente.setEmail(usuario.getEmail());
-            // Solo actualizar la contraseña si no está vacía
             if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
                 usuarioExistente.setPassword(passwordEncoder.encode(usuario.getPassword()));
             }
             usuarioExistente.setTipo(usuario.getTipo());
             repoUsuario.save(usuarioExistente);
         }
-        return "redirect:/usuario"; // Redirige a la lista de usuarios
+        return "redirect:/usuario";
     }
 
     @GetMapping("/del/{id}")
     public String eliminarUsuario(@PathVariable Long id) {
         repoUsuario.deleteById(id);
-        return "redirect:/usuario"; // Redirige a la lista de usuarios
+        return "redirect:/usuario";
     }
 } 

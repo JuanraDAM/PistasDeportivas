@@ -14,6 +14,22 @@
                 window.location.href = "/reservas";
             }
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var horarioSelect = document.getElementById("horarioSelect");
+            var options = Array.from(horarioSelect.options);
+
+            // Eliminar duplicados y ordenar
+            var uniqueOptions = options.filter((option, index, self) =>
+                index === self.findIndex((o) => (
+                    o.value === option.value
+                ))
+            ).sort((a, b) => a.text.localeCompare(b.text));
+
+            // Limpiar el select y añadir las opciones únicas y ordenadas
+            horarioSelect.innerHTML = "";
+            uniqueOptions.forEach(option => horarioSelect.add(option));
+        });
     </script>
 </head>
 <body>
@@ -57,11 +73,12 @@
                 <tr th:each="reserva : ${reservas}">
                     <td th:text="${reserva.usuario.username}"></td>
                     <td th:text="${reserva.instalacion != null ? reserva.instalacion.nombre : 'N/A'}"></td>
-                    <td th:text="${reserva.horario.horaInicio} + ' - ' + ${reserva.horario.horaFin}"></td>
+                    <td th:text="${reserva.horario != null ? reserva.horario.horaInicio + ' - ' + reserva.horario.horaFin : 'N/A'}"></td>
                     <td th:text="${#temporals.format(reserva.fecha, 'yyyy-MM-dd')}"></td>
                     <td>
                         <span th:if="${reserva.fecha.isAfter(T(java.time.LocalDate).now()) or 
                                      (reserva.fecha.isEqual(T(java.time.LocalDate).now()) and 
+                                      reserva.horario != null and 
                                       reserva.horario.horaInicio.isAfter(T(java.time.LocalDateTime).now().toLocalTime()))}">
                             <a th:href="@{/reservas/edit/{id}(id=${reserva.id})}" class="btn btn-primary">Editar</a>
                             <a th:href="@{/reservas/del/{id}(id=${reserva.id})}" class="btn btn-danger">Eliminar</a>
