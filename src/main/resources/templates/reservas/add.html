@@ -27,7 +27,7 @@
 
             <div class="form-group">
                 <label for="horario">Horario</label>
-                <select th:field="*{horario}" id="horario" class="form-control" required>
+                <select th:field="*{horario.id}" id="horario" class="form-control" required>
                     <option th:each="horario : ${horarios}" th:value="${horario.id}"
                             th:text="${horario.horaInicio} + ' - ' + ${horario.horaFin}"></option>
                 </select>

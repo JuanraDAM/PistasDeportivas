@@ -1,15 +1,11 @@
 package com.iesvdc.acceso.pistasdeportivas.controladores;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import java.util.Comparator;
+import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 import javax.validation.Valid;
 
 import com.iesvdc.acceso.pistasdeportivas.modelos.Reserva;
@@ -21,13 +17,19 @@ import com.iesvdc.acceso.pistasdeportivas.repos.RepoInstalacion;
 import com.iesvdc.acceso.pistasdeportivas.repos.RepoHorario;
 import com.iesvdc.acceso.pistasdeportivas.modelos.Instalacion;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Comparator;
-import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/reservas")
@@ -57,7 +59,7 @@ public class ControReserva {
                 if (instalacion != null) {
                     page = repoReserva.findByInstalacion(instalacion, pageable);
                 } else {
-                    page = Page.empty(pageable);
+                    page = repoReserva.findAll(pageable);
                 }
             } else {
                 page = repoReserva.findAll(pageable);
@@ -65,6 +67,7 @@ public class ControReserva {
             model.addAttribute("page", page);
             model.addAttribute("reservas", page.getContent());
             model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("horarios", repoHorario.findAll());
             model.addAttribute("instalacionId", instalacionId);
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al cargar las reservas: " + e.getMessage());
@@ -82,7 +85,7 @@ public class ControReserva {
             List<Reserva> reservas = repoReserva.findByUsuario(usuario);
             model.addAttribute("reservas", reservas);
         } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al cargar las reservas: " + e.getMessage());
+            model.addAttribute("mensaje", "Error al cargar tus reservas: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
@@ -92,13 +95,13 @@ public class ControReserva {
     @GetMapping("/add")
     public String mostrarFormularioAgregarReserva(Model model) {
         try {
-            model.addAttribute("instalaciones", repoInstalacion.findAll());
-            List<Horario> horarios = repoHorario.findAll();
-            horarios.sort(Comparator.comparing(Horario::getHoraInicio));
-            model.addAttribute("horarios", horarios);
             model.addAttribute("reserva", new Reserva());
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
         } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al cargar los datos: " + e.getMessage());
+            model.addAttribute("mensaje", "Error al cargar el formulario: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
@@ -109,49 +112,70 @@ public class ControReserva {
     public String agregarReserva(@Valid @ModelAttribute("reserva") Reserva reserva,
                                  BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("mensaje", "Error en los datos de la reserva.");
+            model.addAttribute("mensaje", "Por favor corrija los errores en el formulario.");
             model.addAttribute("instalaciones", repoInstalacion.findAll());
-            model.addAttribute("horarios", repoHorario.findAll());
-            return "reservas/add";
-        }
-
-        List<Reserva> reservasExistentes = repoReserva.findByInstalacionAndFechaAndHorario(
-                reserva.getInstalacion(), reserva.getFecha(), reserva.getHorario());
-        if (!reservasExistentes.isEmpty()) {
-            model.addAttribute("mensaje", "La pista ya está reservada en este horario.");
-            model.addAttribute("instalaciones", repoInstalacion.findAll());
-            model.addAttribute("horarios", repoHorario.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
             return "reservas/add";
         }
 
         try {
+            if (reserva.getHorario() == null || reserva.getHorario().getId() == null) {
+                result.rejectValue("horario", "error.reserva", "Horario es obligatorio");
+                model.addAttribute("mensaje", "El horario es obligatorio.");
+                model.addAttribute("instalaciones", repoInstalacion.findAll());
+                model.addAttribute("horarios", repoHorario.findAll().stream()
+                    .sorted(Comparator.comparing(Horario::getHoraInicio))
+                    .collect(Collectors.toList()));
+                return "reservas/add";
+            }
+
+            Horario horarioSeleccionado = repoHorario.findById(reserva.getHorario().getId())
+                .orElse(null);
+            if (horarioSeleccionado == null) {
+                result.rejectValue("horario", "error.reserva", "Horario inválido");
+                model.addAttribute("mensaje", "Horario inválido.");
+                model.addAttribute("instalaciones", repoInstalacion.findAll());
+                model.addAttribute("horarios", repoHorario.findAll().stream()
+                    .sorted(Comparator.comparing(Horario::getHoraInicio))
+                    .collect(Collectors.toList()));
+                return "reservas/add";
+            }
+
+            reserva.setHorario(horarioSeleccionado);
+
             checkReservaConstraints(reserva, false);
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = repoUsuario.findByUsername(authentication.getName()).get(0);
+            reserva.setUsuario(usuario);
+
             repoReserva.save(reserva);
-            // Redirigir a "Mis Reservas" en lugar de "reservas"
-            return "redirect:/mis-datos/mis-reservas";
         } catch (Exception e) {
             model.addAttribute("mensaje", e.getMessage());
             model.addAttribute("instalaciones", repoInstalacion.findAll());
-            model.addAttribute("horarios", repoHorario.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
             e.printStackTrace();
             return "reservas/add";
         }
+        return "redirect:/reservas/mis-reservas";
     }
 
     @GetMapping("/edit/{id}")
     public String mostrarFormularioEditarReserva(@PathVariable Long id, Model model) {
         try {
-            Reserva reserva = repoReserva.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
-            model.addAttribute("reserva", reserva);
-            model.addAttribute("instalaciones", repoInstalacion.findAll());
-            List<Horario> horarios = repoHorario.findAll().stream()
-                .distinct()
-                .sorted(Comparator.comparing(Horario::getHoraInicio))
-                .collect(Collectors.toList());
-            model.addAttribute("horarios", horarios);
+            Reserva reserva = repoReserva.findById(id).orElse(null);
+            if (reserva != null) {
+                cargarDatosReserva(model, reserva);
+            } else {
+                model.addAttribute("mensaje", "Reserva no encontrada.");
+                return "error";
+            }
         } catch (Exception e) {
-            model.addAttribute("mensaje", "Error al cargar los datos: " + e.getMessage());
+            model.addAttribute("mensaje", "Error al cargar la reserva: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
@@ -163,50 +187,87 @@ public class ControReserva {
                                 @Valid @ModelAttribute("reserva") Reserva reserva,
                                 BindingResult result, Model model) {
         if (result.hasErrors()) {
-            model.addAttribute("mensaje", "Error en los datos de la reserva.");
-            cargarDatosReserva(model, reserva);
+            model.addAttribute("mensaje", "Por favor corrija los errores en el formulario.");
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
             return "reservas/edit";
         }
 
         try {
-            Reserva reservaExistente = repoReserva.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+            if (reserva.getHorario() == null || reserva.getHorario().getId() == null) {
+                result.rejectValue("horario", "error.reserva", "Horario es obligatorio");
+                model.addAttribute("mensaje", "El horario es obligatorio.");
+                model.addAttribute("instalaciones", repoInstalacion.findAll());
+                model.addAttribute("horarios", repoHorario.findAll().stream()
+                    .sorted(Comparator.comparing(Horario::getHoraInicio))
+                    .collect(Collectors.toList()));
+                return "reservas/edit";
+            }
+
+            Horario horarioSeleccionado = repoHorario.findById(reserva.getHorario().getId())
+                .orElse(null);
+            if (horarioSeleccionado == null) {
+                result.rejectValue("horario", "error.reserva", "Horario inválido");
+                model.addAttribute("mensaje", "Horario inválido.");
+                model.addAttribute("instalaciones", repoInstalacion.findAll());
+                model.addAttribute("horarios", repoHorario.findAll().stream()
+                    .sorted(Comparator.comparing(Horario::getHoraInicio))
+                    .collect(Collectors.toList()));
+                return "reservas/edit";
+            }
+
+            reserva.setHorario(horarioSeleccionado);
+
             checkReservaConstraints(reserva, true);
 
-            // Conservar el usuario original
-            reservaExistente.setFecha(reserva.getFecha());
-            reservaExistente.setHorario(reserva.getHorario());
-            reservaExistente.setInstalacion(reserva.getInstalacion());
-            repoReserva.save(reservaExistente);
-            // Redirigir a "Mis Reservas" en lugar de "reservas"
-            return "redirect:/mis-datos/mis-reservas";
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Usuario usuario = repoUsuario.findByUsername(authentication.getName()).get(0);
+            reserva.setUsuario(usuario);
+
+            repoReserva.save(reserva);
         } catch (Exception e) {
             model.addAttribute("mensaje", e.getMessage());
-            cargarDatosReserva(model, reserva);
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
             e.printStackTrace();
             return "reservas/edit";
         }
+        return "redirect:/reservas/mis-reservas";
     }
 
     @GetMapping("/del/{id}")
     public String eliminarReserva(@PathVariable Long id, Model model) {
         try {
-            repoReserva.deleteById(id);
-            // Opcional: Redirigir a "Mis Reservas" en lugar de "reservas"
-            return "redirect:/mis-datos/mis-reservas";
+            Reserva reserva = repoReserva.findById(id).orElse(null);
+            if (reserva != null) {
+                repoReserva.delete(reserva);
+            } else {
+                model.addAttribute("mensaje", "Reserva no encontrada.");
+                return "error";
+            }
         } catch (Exception e) {
             model.addAttribute("mensaje", "Error al eliminar la reserva: " + e.getMessage());
             e.printStackTrace();
             return "error";
         }
+        return "redirect:/reservas/mis-reservas";
     }
 
     private void cargarDatosReserva(Model model, Reserva reserva) {
-        model.addAttribute("reserva", reserva);
-        model.addAttribute("instalaciones", repoInstalacion.findAll());
-        model.addAttribute("horarios", repoHorario.findAll().stream()
-            .sorted(Comparator.comparing(Horario::getHoraInicio))
-            .collect(Collectors.toList()));
+        try {
+            model.addAttribute("reserva", reserva);
+            model.addAttribute("instalaciones", repoInstalacion.findAll());
+            model.addAttribute("horarios", repoHorario.findAll().stream()
+                .sorted(Comparator.comparing(Horario::getHoraInicio))
+                .collect(Collectors.toList()));
+        } catch (Exception e) {
+            model.addAttribute("mensaje", "Error al cargar datos de la reserva: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void checkReservaConstraints(Reserva reserva, boolean isEdit) throws Exception {
@@ -219,7 +280,8 @@ public class ControReserva {
         if (reserva.getFecha().isBefore(hoy)) {
             throw new Exception("La fecha de la reserva no puede ser anterior al día de hoy.");
         }
-        if (reserva.getFecha().isAfter(hoy.plusDays(7))) {
+    
+        if (reserva.getFecha().isAfter(hoy.plusWeeks(1))) {
             throw new Exception("No se puede reservar con más de una semana de antelación.");
         }
     
@@ -227,27 +289,20 @@ public class ControReserva {
             throw new Exception("No se puede actualizar reservas que ya han pasado o son para el día de hoy.");
         }
     
-        List<Reserva> userSameDay = repoReserva.findByUsuario(user).stream()
-            .filter(r -> r.getFecha().equals(reserva.getFecha())
-                      && !r.getId().equals(reserva.getId()))
+        List<Reserva> reservasSameDay = repoReserva.findByUsuario(user).stream()
+            .filter(r -> r.getFecha().equals(reserva.getFecha()) && (reserva.getId() == null || !r.getId().equals(reserva.getId())))
             .collect(Collectors.toList());
-        if (!userSameDay.isEmpty()) {
+        if (!reservasSameDay.isEmpty()) {
             throw new Exception("Ya tienes una reserva para ese día.");
         }
     
-        if (!isEdit) {
-            reserva.setUsuario(user);
-        }
-    
-        // No reservar en horas ya pasadas del día actual
         if (reserva.getFecha().isEqual(hoy)) {
             LocalTime horaReserva = reserva.getHorario().getHoraInicio();
             if (horaReserva.isBefore(ahora.toLocalTime())) {
-                throw new Exception("No se puede reservar en horas ya pasadas del día de hoy.");
+                throw new Exception("No se puede reservar en horas ya pasadas del día actual.");
             }
         }
     
-        // Verificar que no haya solapamiento de reservas para la misma instalación y horario
         if (reserva.getHorario() == null || reserva.getHorario().getHoraInicio() == null || reserva.getHorario().getHoraFin() == null) {
             throw new Exception("El horario de la reserva no puede ser nulo.");
         }
@@ -257,10 +312,10 @@ public class ControReserva {
                          r.getHorario().getHoraFin() != null &&
                          r.getHorario().getHoraInicio().isBefore(reserva.getHorario().getHoraFin()) &&
                          r.getHorario().getHoraFin().isAfter(reserva.getHorario().getHoraInicio()) &&
-                         !r.getId().equals(reserva.getId()))
+                         (reserva.getId() == null || !r.getId().equals(reserva.getId())))
             .collect(Collectors.toList());
         if (!overlappingReservas.isEmpty()) {
-            throw new Exception("La reserva se solapa con otra existente en el mismo horario.");
+            throw new Exception("El horario seleccionado ya está reservado para esta instalación.");
         }
     }
 }
